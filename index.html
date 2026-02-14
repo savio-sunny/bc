@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>savichen</title>
     <style>
         :root {
             --gold: #d4af37;
             --gold-glow: rgba(212, 175, 55, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-shine: rgba(255, 255, 255, 0.1);
+            --card-black: #000000;
+            --glass-border: rgba(212, 175, 55, 0.2); /* Subtle gold border instead of white */
         }
 
         * {
@@ -32,6 +32,9 @@
             perspective: 2500px;
             font-family: 'Times New Roman', serif;
             cursor: grab;
+            touch-action: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body:active {
@@ -80,27 +83,36 @@
         .card-face {
             position: absolute;
             inset: 0;
-            background: #000; 
+            /* Full Black Optimization */
+            background: var(--card-black); 
             border: 1px solid var(--glass-border);
             border-radius: 15px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden; 
             padding: 20px;
             overflow: hidden;
+            transform-style: preserve-3d; 
+            /* Subtle inner shadow for depth on full black */
+            box-shadow: inset 0 0 50px rgba(212, 175, 55, 0.05);
+        }
+
+        .card-front {
+            transform: rotateY(0deg) translateZ(1px);
         }
 
         .card-back {
-            transform: rotateY(180deg);
+            transform: rotateY(180deg) translateZ(1px);
         }
 
         .edge-glow {
             position: absolute;
             inset: 0;
             border-radius: 15px;
-            padding: 2.5px; 
+            padding: 2px; 
             pointer-events: none;
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -115,16 +127,8 @@
                 transparent 58%,
                 transparent 100%
             );
-            opacity: 0.9;
-            filter: brightness(1.5) contrast(1.2);
-        }
-
-        .glare {
-            position: absolute;
-            inset: -100%;
-            background: radial-gradient(circle at center, var(--glass-shine) 0%, transparent 60%);
-            pointer-events: none;
-            mix-blend-mode: screen;
+            opacity: 0.8;
+            filter: brightness(1.2);
         }
 
         .content {
@@ -142,7 +146,7 @@
             height: 80px;
             margin-bottom: 15px;
             object-fit: contain;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
             transform: translateZ(20px);
         }
 
@@ -154,7 +158,7 @@
             font-weight: 200;
             white-space: nowrap;
             margin-bottom: 25px;
-            text-shadow: 0 5px 20px rgba(0,0,0,0.8);
+            text-shadow: 0 0 20px rgba(0,0,0,1);
             text-align: center;
             width: 100%;
             margin-left: 7px; 
@@ -162,7 +166,7 @@
 
         .back-text {
             font-size: clamp(0.8rem, 3vw, 1.1rem);
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.9);
             letter-spacing: 8px;
             text-transform: uppercase;
             font-weight: 200;
@@ -211,6 +215,12 @@
             text-transform: uppercase;
             z-index: 20;
         }
+
+        @media (max-width: 600px) {
+            .scene {
+                height: 280px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -225,7 +235,6 @@
         <div class="card-wrapper" id="card">
             <div class="card-face card-front">
                 <div class="edge-glow" id="edgeFront"></div>
-                <div class="glare" id="glare"></div>
                 <div class="content">
                     <img src="essen/logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
                     <h1 class="name">SAVIO SUNNY</h1>
@@ -247,7 +256,9 @@
         const pCanvas = document.getElementById('particleCanvas');
         const pCtx = pCanvas.getContext('2d');
         let particles = [];
-        const particleCount = 120;
+        
+        const isMobile = window.innerWidth < 768;
+        const particleCount = isMobile ? 60 : 120;
 
         function resizeCanvas() {
             pCanvas.width = window.innerWidth;
@@ -263,8 +274,8 @@
                 this.x = Math.random() * pCanvas.width;
                 this.y = Math.random() * pCanvas.height;
                 this.size = Math.random() * 2 + 0.5;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.speedY = (Math.random() - 0.5) * 0.4;
                 this.alpha = Math.random() * 0.5 + 0.2;
                 this.flicker = Math.random() * 0.02;
             }
@@ -288,7 +299,6 @@
         for (let i = 0; i < particleCount; i++) { particles.push(new Particle()); }
 
         const card = document.getElementById('card');
-        const glare = document.getElementById('glare');
         const edgeFront = document.getElementById('edgeFront');
         const edgeBack = document.getElementById('edgeBack');
         
@@ -315,8 +325,6 @@
 
             edgeFront.style.setProperty('--flare-angle', `${flareAngle}deg`);
             edgeBack.style.setProperty('--flare-angle', `${-flareAngle}deg`);
-
-            glare.style.transform = `translateX(${rotateY * 0.3}px) translateY(${rotateX * 0.3}px)`;
             
             requestAnimationFrame(animate);
         };
@@ -331,12 +339,17 @@
 
         const dragging = (e) => {
             if (!isDragging) return;
+            if (e.type === 'touchmove') e.preventDefault();
+
             const x = e.pageX || (e.touches ? e.touches[0].pageX : 0);
             const y = e.pageY || (e.touches ? e.touches[0].pageY : 0);
             const dx = x - startX;
             const dy = y - startY;
+            
             rotateY += dx * 0.4;
             rotateX -= dy * 0.4;
+            rotateX = Math.max(-60, Math.min(60, rotateX));
+
             startX = x;
             startY = y;
         };
@@ -346,10 +359,19 @@
             card.style.transition = 'transform 1.2s cubic-bezier(0.23, 1, 0.32, 1)';
         };
 
+        window.addEventListener('keydown', (e) => {
+            const step = 15;
+            if (e.key === 'ArrowLeft') { rotateY -= step; autoRotateY = 0; }
+            if (e.key === 'ArrowRight') { rotateY += step; autoRotateY = 0; }
+            if (e.key === 'ArrowUp') { rotateX += step; }
+            if (e.key === 'ArrowDown') { rotateX -= step; }
+        });
+
         window.addEventListener('mousedown', startDragging);
         window.addEventListener('mousemove', dragging);
         window.addEventListener('mouseup', stopDragging);
-        window.addEventListener('touchstart', startDragging);
+        window.addEventListener('mouseleave', stopDragging); 
+        window.addEventListener('touchstart', startDragging, { passive: false });
         window.addEventListener('touchmove', dragging, { passive: false });
         window.addEventListener('touchend', stopDragging);
     </script>

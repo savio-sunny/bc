@@ -148,6 +148,9 @@
             object-fit: contain;
             filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
             transform: translateZ(20px);
+            /* Prevent ghost image dragging */
+            pointer-events: none;
+            -webkit-user-drag: none;
         }
 
         .name {
@@ -236,7 +239,7 @@
             <div class="card-face card-front">
                 <div class="edge-glow" id="edgeFront"></div>
                 <div class="content">
-                    <img src="essen/logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+                    <img src="essen/logo.png" alt="Logo" class="logo" draggable="false" onerror="this.style.display='none'">
                     <h1 class="name">SAVIO SUNNY</h1>
                     <div class="divider"></div>
                 </div>
